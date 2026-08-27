@@ -1,0 +1,10 @@
+services:
+  api:
+    build: .
+    working_dir: /app
+    volumes:
+      - .:/app
+      - api_node_modules:/app/node_modules
+
+volumes:
+  api_node_modules:

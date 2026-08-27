@@ -1,0 +1,25 @@
+{
+  "name": "mini-nest",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "description": "Part 1: DIY IoC container (Nest-style DI)",
+  "scripts": {
+    "test": "vitest run",
+    "test:watch": "vitest"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "reflect-metadata": "^0.2.2"
+  },
+  "devDependencies": {
+    "@swc/core": "^1.15.3",
+    "@types/node": "^26.4.0",
+    "tsx": "^4.23.12",
+    "typescript": "^6.0.3",
+    "unplugin-swc": "^1.5.9",
+    "vitest": "^4.1.11"
+  }
+}
