@@ -3,7 +3,7 @@
   "version": "1.0.0",
   "private": true,
   "type": "module",
-  "description": "Part 1: DIY IoC container (Nest-style DI)",
+  "description": "Part 2: DIY Nest-style IoC + HTTP routing + DTO validation",
   "scripts": {
     "test": "vitest run",
     "test:watch": "vitest"
@@ -12,6 +12,8 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
+    "class-transformer": "^0.5.1",
+    "class-validator": "^0.15.1",
     "reflect-metadata": "^0.2.2"
   },
   "devDependencies": {
