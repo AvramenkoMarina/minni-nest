@@ -34,6 +34,9 @@ export class Container {
     if (this.providers.has(token)) {
       const provider = this.providers.get(token);
       if (isConstructor(provider)) {
+        if (this.singletons.has(provider)) {
+          return this.singletons.get(provider);
+        }
         return this.instantiate(provider, resolving, token);
       }
       return provider;
@@ -43,15 +46,16 @@ export class Container {
       return this.instantiate(token, resolving, token);
     }
 
-    throw new Error(`No provider registered for token: ${formatToken(token)}`);
+    const chain = [...resolving, token].map(formatToken).join(" -> ");
+    throw new Error(`No provider registered for token: ${chain}`);
   }
 
   private instantiate(
     Target: Constructor,
     resolving: InjectionToken[],
-    cacheKey: InjectionToken,
+    pathToken: InjectionToken,
   ): unknown {
-    const nextPath = [...resolving, cacheKey];
+    const nextPath = [...resolving, pathToken];
     const paramTypes: Array<Constructor | undefined> =
       Reflect.getMetadata("design:paramtypes", Target) ?? [];
     const injected: Array<InjectionToken | undefined> =
@@ -74,7 +78,7 @@ export class Container {
     const scope = (Reflect.getMetadata(SCOPE, Target) as Scope | undefined) ?? "singleton";
 
     if (scope === "singleton") {
-      this.singletons.set(cacheKey, instance);
+      this.singletons.set(Target, instance);
     }
 
     return instance;

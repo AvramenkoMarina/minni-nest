@@ -59,6 +59,15 @@ describe("Container", () => {
     expect(container.resolve(SingletonX)).toBe(container.resolve(SingletonX));
   });
 
+  it("shares singleton between token alias and constructor resolve", () => {
+    const container = new Container();
+    container.register("X", SingletonX);
+
+    const viaToken = container.resolve<SingletonX>("X");
+    const viaClass = container.resolve(SingletonX);
+    expect(viaToken).toBe(viaClass);
+  });
+
   it("returns a new instance for transient scope", () => {
     const container = new Container();
     expect(container.resolve(TransientY)).not.toBe(container.resolve(TransientY));
