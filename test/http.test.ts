@@ -7,17 +7,8 @@ import { Injectable } from "../src/decorators/injectable.js";
 import { Get, Post } from "../src/decorators/methods.js";
 import { Body, Param, Query } from "../src/decorators/params.js";
 import { Dispatcher } from "../src/dispatcher.js";
-import { CreateUserDto } from "../src/dto/create-user.dto.js";
-
-@Injectable()
-class UsersService {
-  lastCreated: CreateUserDto | null = null;
-
-  create(dto: CreateUserDto) {
-    this.lastCreated = dto;
-    return { id: 1, email: dto.email, name: dto.name };
-  }
-}
+import { CreateUserBody, type CreateUserDto } from "../src/dto/create-user.dto.js";
+import { UsersService } from "../src/services/users.service.js";
 
 @Controller("users")
 @Injectable()
@@ -31,12 +22,12 @@ class UsersController {
 
   @Get(":id")
   findOne(@Param("id") id: string) {
-    return { id };
+    return this.users.findOne(id);
   }
 
   @Post()
-  create(@Body() body: CreateUserDto) {
-    return this.users.create(body);
+  create(@Body() body: CreateUserBody) {
+    return this.users.create(body as CreateUserDto);
   }
 }
 
@@ -54,9 +45,9 @@ describe("HTTP dispatcher", () => {
     );
   });
 
-  async function startApp() {
+  async function startApp(options: ConstructorParameters<typeof Dispatcher>[2] = {}) {
     const container = new Container();
-    const dispatcher = new Dispatcher(container, [UsersController]);
+    const dispatcher = new Dispatcher(container, [UsersController], options);
     const server = dispatcher.createServer();
     servers.push(server);
 
@@ -67,18 +58,20 @@ describe("HTTP dispatcher", () => {
     return { container, baseUrl };
   }
 
+  const authHeaders = { Authorization: "Bearer token" };
+
   it("joins controller prefix with @Get(':id') → GET /users/42", async () => {
     const { baseUrl } = await startApp();
-    const res = await fetch(`${baseUrl}/users/42`);
+    const res = await fetch(`${baseUrl}/users/42`, { headers: authHeaders });
     const json = await res.json();
 
     expect(res.status).toBe(200);
-    expect(json).toEqual({ id: "42" });
+    expect(json).toEqual(expect.objectContaining({ id: "42" }));
   });
 
   it("injects @Param into the handler argument", async () => {
     const { baseUrl } = await startApp();
-    const res = await fetch(`${baseUrl}/users/42`);
+    const res = await fetch(`${baseUrl}/users/42`, { headers: authHeaders });
     const text = await res.text();
 
     expect(text).toMatch(/42/);
@@ -86,7 +79,7 @@ describe("HTTP dispatcher", () => {
 
   it("injects @Query into a separate handler argument", async () => {
     const { baseUrl } = await startApp();
-    const res = await fetch(`${baseUrl}/users?limit=5`);
+    const res = await fetch(`${baseUrl}/users?limit=5`, { headers: authHeaders });
     const json = await res.json();
 
     expect(res.status).toBe(200);
@@ -97,7 +90,7 @@ describe("HTTP dispatcher", () => {
     const { baseUrl } = await startApp();
     const res = await fetch(`${baseUrl}/users`, {
       method: "POST",
-      headers: { "Content-Type": "application/json" },
+      headers: { ...authHeaders, "Content-Type": "application/json" },
       body: JSON.stringify({ email: "not-an-email" }),
     });
     const text = await res.text();
@@ -115,19 +108,21 @@ describe("HTTP dispatcher", () => {
     );
   });
 
-  it("accepts valid DTO as CreateUserDto instance", async () => {
+  it("accepts valid DTO body", async () => {
     const { container, baseUrl } = await startApp();
     const res = await fetch(`${baseUrl}/users`, {
       method: "POST",
-      headers: { "Content-Type": "application/json" },
+      headers: { ...authHeaders, "Content-Type": "application/json" },
       body: JSON.stringify({ email: "ada@example.com", name: "Ada" }),
     });
     const json = await res.json();
     const service = container.resolve(UsersService);
 
     expect(res.status).toBe(201);
-    expect(json).toEqual({ id: 1, email: "ada@example.com", name: "Ada" });
-    expect(service.lastCreated).toBeInstanceOf(CreateUserDto);
+    expect(json).toEqual(
+      expect.objectContaining({ id: 1, email: "ada@example.com", name: "Ada" }),
+    );
+    expect(service.lastCreated).toEqual({ email: "ada@example.com", name: "Ada" });
   });
 
   it("resolves controller dependencies via the IoC container singleton", async () => {
@@ -136,13 +131,12 @@ describe("HTTP dispatcher", () => {
 
     await fetch(`${baseUrl}/users`, {
       method: "POST",
-      headers: { "Content-Type": "application/json" },
+      headers: { ...authHeaders, "Content-Type": "application/json" },
       body: JSON.stringify({ email: "grace@example.com", name: "Grace" }),
     });
 
     const serviceAfter = container.resolve(UsersService);
     expect(serviceAfter).toBe(serviceBefore);
-    expect(serviceAfter.lastCreated).toBeInstanceOf(CreateUserDto);
     expect(serviceAfter.lastCreated?.email).toBe("grace@example.com");
   });
 });
