@@ -3,7 +3,7 @@
   "version": "1.0.0",
   "private": true,
   "type": "module",
-  "description": "Part 2: DIY Nest-style IoC + HTTP routing + DTO validation",
+  "description": "Part 3: DIY Nest-style IoC + HTTP routing + request lifecycle",
   "scripts": {
     "test": "vitest run",
     "test:watch": "vitest"
@@ -12,9 +12,10 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
-    "class-transformer": "^0.5.1",
-    "class-validator": "^0.15.1",
-    "reflect-metadata": "^0.2.2"
+    "dotenv": "^8.2.0",
+    "node-fetch": "^3.3.2",
+    "reflect-metadata": "^0.2.2",
+    "zod": "^4.5.4"
   },
   "devDependencies": {
     "@swc/core": "^1.15.3",
