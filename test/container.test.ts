@@ -68,6 +68,25 @@ describe("Container", () => {
     expect(viaToken).toBe(viaClass);
   });
 
+  it("shares singleton when constructor resolve happens before token alias", () => {
+    const container = new Container();
+    container.register("X", SingletonX);
+
+    const viaClass = container.resolve(SingletonX);
+    const viaToken = container.resolve<SingletonX>("X");
+    expect(viaToken).toBe(viaClass);
+  });
+
+  it("includes the resolve chain in missing provider errors", () => {
+    @Injectable()
+    class NeedsToken {
+      constructor(@Inject("MISSING") public readonly value: unknown) {}
+    }
+
+    const container = new Container();
+    expect(() => container.resolve(NeedsToken)).toThrowError(/NeedsToken -> MISSING/);
+  });
+
   it("returns a new instance for transient scope", () => {
     const container = new Container();
     expect(container.resolve(TransientY)).not.toBe(container.resolve(TransientY));

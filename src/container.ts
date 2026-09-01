@@ -43,6 +43,9 @@ export class Container {
     }
 
     if (isConstructor(token)) {
+      if (this.singletons.has(token)) {
+        return this.singletons.get(token);
+      }
       return this.instantiate(token, resolving, token);
     }
 
